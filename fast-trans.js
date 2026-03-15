@@ -1,23 +1,19 @@
 (function() {
     const FastTrans = {
-        // تحديد لغة جهاز المستخدم (مثل 'ar', 'en', 'fr')
         userLang: (navigator.language || navigator.userLanguage).split('-')[0],
         apiEndpoint: "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=",
 
         async init() {
-            // تجنب الترجمة إذا كانت لغة الصفحة الأصلية هي نفس لغة المستخدم
-            const docLang = document.documentElement.lang || 'auto';
+            // تجنب الترجمة إذا كانت لغة الصفحة هي نفس لغة المستخدم
+            const docLang = document.documentElement.lang || '';
             if (docLang.toLowerCase().includes(this.userLang)) return;
 
-            // الحصول على جميع العناصر النصية داخل الـ Body
-            // نستخدم مصفوفة لتجنب ترجمة الوسوم التقنية
             const walker = document.createTreeWalker(
                 document.body,
                 NodeFilter.SHOW_TEXT,
                 {
                     acceptNode: function(node) {
                         const parent = node.parentElement.tagName.toLowerCase();
-                        // تجاهل العناصر الحساسة التي قد تفسد الموقع إذا تُرجمت
                         if (['script', 'style', 'noscript', 'code', 'pre'].includes(parent)) {
                             return NodeFilter.FILTER_REJECT;
                         }
@@ -27,42 +23,43 @@
             );
 
             let node;
-            const textNodes = [];
+            const nodes = [];
+            const texts = [];
+
             while (node = walker.nextNode()) {
-                textNodes.push(node);
+                nodes.push(node);
+                texts.push(node.textContent.trim());
             }
 
-            // ترجمة النصوص دفعة واحدة (أو على مجموعات لضمان السرعة)
-            for (const textNode of textNodes) {
-                this.translateNode(textNode, this.userLang);
-            }
+            if (texts.length === 0) return;
+
+            // تجميع كل النصوص وفصلها بعلامة خاصة عشان نبعتهم طلب واحد
+            const combinedText = texts.join(' ||| ');
+            this.translateAll(nodes, combinedText, this.userLang);
         },
 
-        async translateNode(node, targetLang) {
-            const originalText = node.textContent;
-            
+        async translateAll(nodes, combinedText, targetLang) {
             try {
-                const response = await fetch(`${this.apiEndpoint}${targetLang}&dt=t&q=${encodeURIComponent(originalText)}`);
+                const response = await fetch(`${this.apiEndpoint}${targetLang}&dt=t&q=${encodeURIComponent(combinedText)}`);
                 const data = await response.json();
                 
                 if (data && data[0]) {
-                    // تجميع النص المترجم (في حال كان النص الأصلي طويلاً وجوجل قسمه)
-                    const translatedText = data[0].map(item => item[0]).join('');
-                    node.textContent = translatedText;
+                    // جوجل بيرجع النص المترجم مجمع
+                    const fullTranslated = data[0].map(item => item[0]).join('');
+                    // نفك التجميع تاني ونوزع النصوص على العناصر
+                    const translatedArray = fullTranslated.split(' ||| ');
+
+                    nodes.forEach((node, index) => {
+                        if (translatedArray[index]) {
+                            node.textContent = translatedArray[index].trim();
+                        }
+                    });
                 }
             } catch (error) {
-                // في حال حدوث خطأ، يظل النص الأصلي كما هو دون تأثر
-                console.error("FastTrans API Error:", error);
+                console.error("FastTrans Error:", error);
             }
         }
     };
 
-    // التشغيل التلقائي بمجرد استدعاء المكتبة
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => FastTrans.init());
-    } else {
-        FastTrans.init();
-    }
-
-    window.FastTrans = FastTrans;
+    window.addEventListener('load', () => FastTrans.init());
 })();
