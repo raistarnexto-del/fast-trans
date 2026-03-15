@@ -1,138 +1,157 @@
 /**
- * Z-UI.js v1.0.0 - "The Absolute Beast Edition"
- * تم التطوير خصيصاً للمطور محمود | محاكاة Telegram UI و iOS Blur
- * ميزات: دمار شامل، سلاسة فائقة، تخصيص ألوان بضغطة زر، تأثير زجاجي iOS
+ * TG-Master UI v5.0 - The "Ultimate Beast" Edition
+ * Created for: Mahmoud (Expert Developer)
+ * Features: YouTube Glow, iOS Blur, Telegram Ripple, Haptic Engine
  */
 
-(function() {
-    const ZUI = {
-        // الإعدادات الافتراضية (Default Config)
-        config: {
-            primary: '#2481cc',      // لون تليجرام الأزرق
-            background: '#17212b',    // خلفية داكنة
-            card: '#242f3d',          // بطاقات داكنة
-            text: '#ffffff',          // نص أبيض
-            rippleOpacity: 0.3,       // شفافية تأثير الموجة
-            blurStrength: '15px'      // قوة تأثير الـ Blur (iOS Style)
+(function(window, document) {
+    "use strict";
+
+    const TG_Master = {
+        // الإعدادات الافتراضية - دمار شامل
+        defaults: {
+            primary: '#2481cc',
+            glow: 'rgba(36, 129, 204, 0.9)',
+            blurIntensity: '20px',
+            hapticStrength: 15,
+            animationSpeed: '0.4s'
         },
 
-        // 1. تهيئة المكتبة بحقن التنسيقات والمنطق
-        init: function(userConfig = {}) {
-            // دمج إعدادات المستخدم مع الافتراضية
-            this.config = { ...this.config, ...userConfig };
-            this._injectCSS();
-            this._setupEventListeners();
-            this._setupSkeletonLoader();
-            console.log("%c Z-UI Beast: Active 🚀 %c (iOS Blur + Telegram Ripple) ", 
-                "color:#2481cc; font-weight:bold; font-size: 1.1rem;",
-                "color:#ffffff; background:#17212b; padding: 2px 5px; border-radius:4px;");
+        init: function(options) {
+            this.config = Object.assign({}, this.defaults, options);
+            this._injectMasterStyles();
+            this._buildLoader();
+            this._attachGlobalEvents();
+            this._welcomeLog();
         },
 
-        // 2. حقن كل الـ CSS الجبار برمجياً
-        _injectCSS: function() {
-            const c = this.config;
+        // 1. حقن الأكواد الرسومية (CSS) - "مليون سطر" من الجمال
+        _injectMasterStyles: function() {
             const css = `
                 :root {
-                    --z-primary: ${c.primary};
-                    --z-bg: ${c.background};
-                    --z-card: ${c.card};
-                    --z-text: ${c.text};
-                    --z-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    --tg-primary: ${this.config.primary};
+                    --tg-glow: ${this.config.glow};
+                    --tg-blur: ${this.config.blurIntensity};
+                    --tg-curve: cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
-                /* منع الهايلايت المزعج في الموبايل */
-                * { -webkit-tap-highlight-color: transparent !important; outline: none !important; box-sizing: border-box; }
+                /* منع الهايلايت في الموبايل لضمان سلاسة iOS */
+                * { -webkit-tap-highlight-color: transparent !important; }
 
-                body { background-color: var(--z-bg); color: var(--z-text); transition: background 0.3s ease; }
-
-                /* === الأزرار (Telegram Style) === */
-                .z-btn {
-                    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
-                    padding: 12px 24px; border-radius: 12px; border: none; background: var(--z-primary);
-                    color: white; font-weight: 600; cursor: pointer; user-select: none;
-                    transition: var(--z-transition); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                /* شريط تحميل يوتيوب مع التوهج */
+                #tg-progress-bar {
+                    position: fixed; top: 0; left: 0; height: 3px;
+                    background: var(--tg-primary);
+                    box-shadow: 0 0 15px var(--tg-glow), 0 0 8px var(--tg-glow);
+                    z-index: 10000; width: 0; opacity: 0;
+                    transition: width var(--tg-curve), opacity 0.3s ease;
                 }
-                /* تأثير التصغير الارتدادي */
-                .z-btn:active { transform: scale(0.95); filter: brightness(1.1); }
-                .z-btn.secondary { background: rgba(255,255,255,0.08); color: var(--z-primary); }
 
-                /* === تأثير الموجة (Ripple) === */
-                .z-ripple {
-                    position: absolute; background: rgba(255, 255, 255, ${c.rippleOpacity});
-                    border-radius: 50%; pointer-events: none; transform: scale(0);
-                    animation: z-ripple-anim 0.6s cubic-bezier(0, 0, 0.2, 1);
-                }
-                @keyframes z-ripple-anim { to { transform: scale(4); opacity: 0; } }
-
-                /* === تأثير الزجاج iOS (True Blur) === */
-                .z-glass {
-                    background: rgba(255, 255, 255, 0.04) !important;
-                    backdrop-filter: blur(${c.blurStrength});
-                    -webkit-backdrop-filter: blur(${c.blurStrength});
+                /* تأثير الزجاج iOS Blur */
+                .tg-ios-blur {
+                    backdrop-filter: blur(var(--tg-blur));
+                    -webkit-backdrop-filter: blur(var(--tg-blur));
+                    background: rgba(255, 255, 255, 0.05);
                     border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 20px;
-                }
-                /* نسخة داكنة من الزجاج */
-                .z-glass-dark {
-                    background: rgba(0, 0, 0, 0.5) !important;
-                    backdrop-filter: blur(${c.blurStrength});
-                    -webkit-backdrop-filter: blur(${c.blurStrength});
-                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 15px;
                 }
 
-                /* === البطاقات (Cards) === */
-                .z-card { background: var(--z-card); border-radius: 20px; padding: 20px; color: var(--z-text); border: 1px solid rgba(255,255,255,0.05); }
-
-                /* === الهيكل العظمي (Skeleton Load) === */
-                .z-skeleton {
-                    background: linear-gradient(90deg, var(--z-card) 25%, rgba(255,255,255,0.05) 50%, var(--z-card) 75%);
-                    background-size: 200% 100%; animation: z-skeleton-anim 1.5s infinite; border-radius: 8px;
+                /* أزرار تليجرام الاحترافية */
+                .tg-btn {
+                    position: relative; overflow: hidden;
+                    display: inline-flex; align-items: center; justify-content: center;
+                    padding: 14px 28px; border-radius: 14px; border: none;
+                    background: var(--tg-primary); color: #fff;
+                    font-weight: 600; font-family: sans-serif;
+                    cursor: pointer; transition: transform 0.1s var(--tg-curve);
+                    user-select: none;
                 }
-                @keyframes z-skeleton-anim { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+                .tg-btn:active { transform: scale(0.94); filter: brightness(1.1); }
+
+                /* تأثير الـ Ripple */
+                .tg-ripple-element {
+                    position: absolute; border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.35);
+                    transform: scale(0); animation: tg-ripple-fly 0.6s linear;
+                    pointer-events: none;
+                }
+                @keyframes tg-ripple-fly { to { transform: scale(4); opacity: 0; } }
+
+                /* كلاسات مساعدة للدمار الشامل */
+                .tg-card { background: #1c1c1e; border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); }
+                .tg-skeleton { 
+                    background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%);
+                    background-size: 200% 100%; animation: tg-skele 1.5s infinite;
+                }
+                @keyframes tg-skele { from { background-position: 200% 0; } to { background-position: -200% 0; } }
             `;
-            const s = document.createElement('style'); s.innerText = css; document.head.appendChild(s);
+            const style = document.createElement('style');
+            style.textContent = css;
+            document.head.appendChild(style);
         },
 
-        // 3. إعداد مستمعي الأحداث (Logic)
-        _setupEventListeners: function() {
-            // تأثير الـ Ripple
-            document.addEventListener('mousedown', e => {
-                const btn = e.target.closest('.z-btn');
-                if (btn) this._createRipple(e, btn);
+        // 2. بناء عناصر الواجهة
+        _buildLoader: function() {
+            const bar = document.createElement('div');
+            bar.id = 'tg-progress-bar';
+            document.body.appendChild(bar);
+            this.loaderEl = bar;
+        },
+
+        // 3. نظام التحكم في شريط التحميل (YouTube Glow Style)
+        progress: {
+            start: function() {
+                const el = document.getElementById('tg-progress-bar');
+                el.style.opacity = '1';
+                el.style.width = '40%';
+                setTimeout(() => { el.style.width = '80%'; }, 400);
+            },
+            done: function() {
+                const el = document.getElementById('tg-progress-bar');
+                el.style.width = '100%';
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => { el.style.width = '0'; }, 400);
+                }, 200);
+            }
+        },
+
+        // 4. محرك الأحداث (Ripple & Haptic)
+        _attachGlobalEvents: function() {
+            document.addEventListener('mousedown', (e) => {
+                const btn = e.target.closest('.tg-btn');
+                if (btn) {
+                    this._ripple(e, btn);
+                    if (navigator.vibrate) navigator.vibrate(this.config.hapticStrength);
+                }
             });
-
-            // تأثير الاهتزاز (Haptic) للموبايل
-            document.addEventListener('touchstart', e => {
-                if (e.target.closest('.z-btn') && navigator.vibrate) navigator.vibrate(12);
-            }, {passive: true});
         },
 
-        // 4. دالة إنشاء الموجة
-        _createRipple: function(e, btn) {
-            const r = document.createElement('span');
-            r.className = 'z-ripple';
+        _ripple: function(e, btn) {
+            const ripple = document.createElement('span');
+            ripple.className = 'tg-ripple-element';
             const rect = btn.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
-            r.style.width = r.style.height = `${size}px`;
-            r.style.left = `${e.clientX - rect.left - size/2}px`;
-            r.style.top = `${e.clientY - rect.top - size/2}px`;
-            btn.appendChild(r);
-            r.addEventListener('animationend', () => r.remove());
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+            ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+            btn.appendChild(ripple);
+            ripple.onanimationend = () => ripple.remove();
         },
 
-        // 5. تهيئة الـ Skeleton Loader تلقائياً
-        _setupSkeletonLoader: function() {
-            document.querySelectorAll('[data-z-load]').forEach(el => {
-                el.classList.add('z-skeleton');
-                // مثال: data-z-load="h:20px; w:80%"
-                const styles = el.dataset.zLoad.split(';');
-                styles.forEach(s => {
-                    const [prop, val] = s.split(':');
-                    if (prop && val) el.style[prop.trim()] = val.trim();
-                });
-            });
+        _welcomeLog: function() {
+            console.log("%c TG-MASTER UI v5.0 %c BY MAHMOUD ", "color: white; background: #2481cc; padding: 5px; border-radius: 5px 0 0 5px;", "color: #2481cc; background: #1c1c1e; padding: 5px; border-radius: 0 5px 5px 0;");
         }
     };
 
-    window.ZUI = ZUI;
-})();
+    // ربط المكتبة بالكائن العالمي للتأكد من عدم حدوث ReferenceError
+    window.TG = TG_Master;
+    
+    // تشغيل تلقائي
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => TG.init());
+    } else {
+        TG.init();
+    }
+
+})(window, document);
