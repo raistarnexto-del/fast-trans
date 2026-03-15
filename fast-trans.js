@@ -1,187 +1,138 @@
 /**
- * TG-AuTheme Pro v2.0 - "Mass Destruction Edition"
- * طورت خصيصاً للمطور محمود | تجربة مستخدم تيليجرام فائقة السلسة
+ * Z-UI.js v1.0.0 - "The Absolute Beast Edition"
+ * تم التطوير خصيصاً للمطور محمود | محاكاة Telegram UI و iOS Blur
+ * ميزات: دمار شامل، سلاسة فائقة، تخصيص ألوان بضغطة زر، تأثير زجاجي iOS
  */
 
 (function() {
-    const css = `
-        :root {
-            --tg-main: #2481cc;
-            --tg-bg: #0f172a;
-            --tg-card: #1e293b;
-            --tg-text: #ffffff;
-            --tg-secondary: #94a3b8;
-            --tg-success: #31b545;
-            --tg-error: #e53935;
-        }
-
-        /* 1. منع الهايلايت المزعج عند اللمس */
-        * {
-            -webkit-tap-highlight-color: transparent !important;
-            outline: none !important;
-        }
-
-        body { transition: background 0.3s ease; }
-
-        /* 2. الأزرار الذكية مع أنيميشن فائق السلاسة */
-        .tg-btn {
-            position: relative;
-            overflow: hidden;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 24px;
-            border-radius: 12px;
-            border: none;
-            background: var(--tg-main);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            user-select: none;
-            box-shadow: 0 4px 12px rgba(36, 129, 204, 0.2);
-        }
-
-        /* 3. تأثير الضغط الارتدادي */
-        .tg-btn:active { transform: scale(0.92); filter: brightness(1.1); }
-
-        /* 4. ميزة الـ Ripple الاحترافي */
-        .tg-ripple {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.35);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: scale(0);
-            animation: tg-ripple-fly 0.6s cubic-bezier(0.1, 0.5, 0.5, 1);
-        }
-        @keyframes tg-ripple-fly { to { transform: scale(4); opacity: 0; } }
-
-        /* 5. ميزة الهوفر الذكي (Desktop Only) */
-        @media (hover: hover) {
-            .tg-btn:hover { box-shadow: 0 6px 20px rgba(36, 129, 204, 0.4); transform: translateY(-2px); }
-        }
-
-        /* 6. تأثير الزجاج الرهيب (Glassmorphism) */
-        .tg-glass {
-            background: rgba(255, 255, 255, 0.05) !important;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* 7. إشعارات الـ Toast المدمجة */
-        .tg-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #212121;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 9999;
-        }
-        .tg-toast.show { transform: translateX(-50%) translateY(0); }
-
-        /* 8. تأثير الهيكل العظمي (Skeleton Load) */
-        .tg-skeleton {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-            background-size: 200% 100%;
-            animation: skeleton-load 1.5s infinite;
-        }
-        @keyframes skeleton-load { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-
-        /* 9. تأثير حواف مضيئة (Glow) */
-        .tg-glow:hover { box-shadow: 0 0 15px var(--tg-main); }
-
-        /* 10. وضع الـ Dark Mode التلقائي */
-        @media (prefers-color-scheme: light) {
-            :root { --tg-bg: #f5f5f5; --tg-card: #ffffff; --tg-text: #000000; }
-        }
-    `;
-
-    // حقن الـ CSS في الـ Head
-    const s = document.createElement('style'); s.innerText = css; document.head.appendChild(s);
-
-    const TG = {
-        // 11. تهيئة المكتبة
-        init() {
-            this.applyGlobalListeners();
-            console.log("%c TG-AuTheme: Active 🚀", "color:#2481cc; font-weight:bold;");
+    const ZUI = {
+        // الإعدادات الافتراضية (Default Config)
+        config: {
+            primary: '#2481cc',      // لون تليجرام الأزرق
+            background: '#17212b',    // خلفية داكنة
+            card: '#242f3d',          // بطاقات داكنة
+            text: '#ffffff',          // نص أبيض
+            rippleOpacity: 0.3,       // شفافية تأثير الموجة
+            blurStrength: '15px'      // قوة تأثير الـ Blur (iOS Style)
         },
 
-        // 12. نظام الموجة والاهتزاز
-        applyGlobalListeners() {
+        // 1. تهيئة المكتبة بحقن التنسيقات والمنطق
+        init: function(userConfig = {}) {
+            // دمج إعدادات المستخدم مع الافتراضية
+            this.config = { ...this.config, ...userConfig };
+            this._injectCSS();
+            this._setupEventListeners();
+            this._setupSkeletonLoader();
+            console.log("%c Z-UI Beast: Active 🚀 %c (iOS Blur + Telegram Ripple) ", 
+                "color:#2481cc; font-weight:bold; font-size: 1.1rem;",
+                "color:#ffffff; background:#17212b; padding: 2px 5px; border-radius:4px;");
+        },
+
+        // 2. حقن كل الـ CSS الجبار برمجياً
+        _injectCSS: function() {
+            const c = this.config;
+            const css = `
+                :root {
+                    --z-primary: ${c.primary};
+                    --z-bg: ${c.background};
+                    --z-card: ${c.card};
+                    --z-text: ${c.text};
+                    --z-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                /* منع الهايلايت المزعج في الموبايل */
+                * { -webkit-tap-highlight-color: transparent !important; outline: none !important; box-sizing: border-box; }
+
+                body { background-color: var(--z-bg); color: var(--z-text); transition: background 0.3s ease; }
+
+                /* === الأزرار (Telegram Style) === */
+                .z-btn {
+                    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+                    padding: 12px 24px; border-radius: 12px; border: none; background: var(--z-primary);
+                    color: white; font-weight: 600; cursor: pointer; user-select: none;
+                    transition: var(--z-transition); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                }
+                /* تأثير التصغير الارتدادي */
+                .z-btn:active { transform: scale(0.95); filter: brightness(1.1); }
+                .z-btn.secondary { background: rgba(255,255,255,0.08); color: var(--z-primary); }
+
+                /* === تأثير الموجة (Ripple) === */
+                .z-ripple {
+                    position: absolute; background: rgba(255, 255, 255, ${c.rippleOpacity});
+                    border-radius: 50%; pointer-events: none; transform: scale(0);
+                    animation: z-ripple-anim 0.6s cubic-bezier(0, 0, 0.2, 1);
+                }
+                @keyframes z-ripple-anim { to { transform: scale(4); opacity: 0; } }
+
+                /* === تأثير الزجاج iOS (True Blur) === */
+                .z-glass {
+                    background: rgba(255, 255, 255, 0.04) !important;
+                    backdrop-filter: blur(${c.blurStrength});
+                    -webkit-backdrop-filter: blur(${c.blurStrength});
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 20px;
+                }
+                /* نسخة داكنة من الزجاج */
+                .z-glass-dark {
+                    background: rgba(0, 0, 0, 0.5) !important;
+                    backdrop-filter: blur(${c.blurStrength});
+                    -webkit-backdrop-filter: blur(${c.blurStrength});
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                /* === البطاقات (Cards) === */
+                .z-card { background: var(--z-card); border-radius: 20px; padding: 20px; color: var(--z-text); border: 1px solid rgba(255,255,255,0.05); }
+
+                /* === الهيكل العظمي (Skeleton Load) === */
+                .z-skeleton {
+                    background: linear-gradient(90deg, var(--z-card) 25%, rgba(255,255,255,0.05) 50%, var(--z-card) 75%);
+                    background-size: 200% 100%; animation: z-skeleton-anim 1.5s infinite; border-radius: 8px;
+                }
+                @keyframes z-skeleton-anim { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+            `;
+            const s = document.createElement('style'); s.innerText = css; document.head.appendChild(s);
+        },
+
+        // 3. إعداد مستمعي الأحداث (Logic)
+        _setupEventListeners: function() {
+            // تأثير الـ Ripple
             document.addEventListener('mousedown', e => {
-                const b = e.target.closest('.tg-btn');
-                if (b) this.ripple(e, b);
+                const btn = e.target.closest('.z-btn');
+                if (btn) this._createRipple(e, btn);
             });
 
-            // 13. دعم الاهتزاز (Haptic) عند النقر
+            // تأثير الاهتزاز (Haptic) للموبايل
             document.addEventListener('touchstart', e => {
-                if (e.target.closest('.tg-btn')) {
-                    if (navigator.vibrate) navigator.vibrate(10);
-                }
+                if (e.target.closest('.z-btn') && navigator.vibrate) navigator.vibrate(12);
             }, {passive: true});
         },
 
-        ripple(e, el) {
+        // 4. دالة إنشاء الموجة
+        _createRipple: function(e, btn) {
             const r = document.createElement('span');
-            r.className = 'tg-ripple';
-            const rect = el.getBoundingClientRect();
+            r.className = 'z-ripple';
+            const rect = btn.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             r.style.width = r.style.height = `${size}px`;
             r.style.left = `${e.clientX - rect.left - size/2}px`;
             r.style.top = `${e.clientY - rect.top - size/2}px`;
-            el.appendChild(r);
+            btn.appendChild(r);
             r.addEventListener('animationend', () => r.remove());
         },
 
-        // 14. ميزة إظهار إشعار سريع
-        showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'tg-toast';
-            t.innerText = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.classList.add('show'), 100);
-            setTimeout(() => {
-                t.classList.remove('show');
-                setTimeout(() => t.remove(), 400);
-            }, 3000);
-        },
-
-        // 15. ميزة نسخ النص مع تأثير
-        copy(text) {
-            navigator.clipboard.writeText(text);
-            this.showToast("تم النسخ بنجاح! ✅");
-        },
-
-        // 16. تأثير التحميل على الأزرار
-        setLoading(el, isLoading) {
-            if (isLoading) {
-                el.dataset.oldText = el.innerText;
-                el.innerText = "جاري...";
-                el.style.opacity = "0.7";
-                el.style.pointerEvents = "none";
-            } else {
-                el.innerText = el.dataset.oldText;
-                el.style.opacity = "1";
-                el.style.pointerEvents = "all";
-            }
-        },
-
-        // 17. تغيير الثيم برمجياً
-        setTheme(color) {
-            document.documentElement.style.setProperty('--tg-main', color);
+        // 5. تهيئة الـ Skeleton Loader تلقائياً
+        _setupSkeletonLoader: function() {
+            document.querySelectorAll('[data-z-load]').forEach(el => {
+                el.classList.add('z-skeleton');
+                // مثال: data-z-load="h:20px; w:80%"
+                const styles = el.dataset.zLoad.split(';');
+                styles.forEach(s => {
+                    const [prop, val] = s.split(':');
+                    if (prop && val) el.style[prop.trim()] = val.trim();
+                });
+            });
         }
     };
 
-    // 18. ميزة الحماية من تكرار النقر (Debounce)
-    // 19. الكشف التلقائي عن المتصفح لتحسين الأداء
-    // 20. دعم الـ RTL بشكل افتراضي
-
-    window.TG = TG;
-    TG.init();
+    window.ZUI = ZUI;
 })();
